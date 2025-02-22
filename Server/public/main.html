@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Title</title>
+  </head>
+  <body>
+    <style>
+      .hidden {
+        display: none;
+      }
+    </style>
+
+    <form id="game-form" method="post">
+      <p>ФИО</p>
+
+      <label>
+        Жены:
+        <!-- Надо закешировать -->
+        <input
+          type="text"
+          name="womanName"
+          id="womanName"
+          value="Илон Маск"
+          autofocus
+        />
+      </label>
+      <label>
+        Мужа:
+        <!-- Надо закешировать -->
+        <input
+          type="text"
+          name="manName"
+          id="manName"
+          value="Илона Маскова Трамповна"
+        />
+      </label>
+      <p>Возраст</p>
+      <label
+        >Жены:
+        <input type="text" name="womanAge" value="18" />
+      </label>
+      <label>
+        Мужа:
+        <input type="text" name="manAge" value="21" />
+      </label>
+
+      <button name="isCompared">Расчитать совместимость</button>
+      <button type="button" name="getMatches">Найти возможные пары</button>
+      <button type="reset">Очистить</button>
+    </form>
+    <div id="loader" class="hidden">Отправляем...</div>
+
+    <script>
+      async function CompatibilityMatch(data) {
+        return await fetch("/api/compatibility/match/", {
+          method: "POST",
+        });
+      }
+      async function CompatibilityCheck(data) {
+        return await fetch("/api/compatibility/check/", {
+          method: "POST",
+          body: data,
+        });
+      }
+
+      async function sendData(data) {
+        return await fetch("/api/compatibility/check/", {
+          method: "POST",
+          body: data,
+        });
+      }
+      function serializeForm(formNode) {
+        return new FormData(formNode);
+      }
+      // Вызовем её вот так
+      async function handleFormSubmit(event) {
+        event.preventDefault();
+        const data = serializeForm(event.target);
+        toggleLoader();
+        const res = await sendData(data);
+        const json = await res.json();
+        console.log(json);
+        toggleLoader();
+        if (status === 200) {
+          onSuccess(event.target);
+        } else {
+          onError(res.error);
+        }
+      }
+      function checkValidity(event) {
+        const formNode = event.target.form;
+        const isValid = formNode.checkValidity();
+
+        formNode.querySelector("button").disabled = !isValid;
+      }
+
+      function onError(error) {
+        alert(error.message);
+      }
+      function onSuccess(formNode) {
+        alert("Ваша заявка отправлена!");
+        //formNode.classList.toggle("hidden");
+      }
+      function toggleLoader() {
+        const loader = document.getElementById("loader");
+        loader.classList.toggle("hidden");
+      }
+
+      const applicantForm = document.getElementById("game-form");
+      console.log(applicantForm.getMatches);
+      applicantForm.addEventListener("input", checkValidity);
+      applicantForm.addEventListener("submit", handleFormSubmit);
+      applicantForm.getMatches.addEventListener("click", async (event) => {
+        event.preventDefault();
+        console.log(event.targets)
+        const res = await CompatibilityMatch();
+        const json = await res.json();
+        console.log(json);
+        toggleLoader();
+        if (status === 200) {
+          onSuccess(event.target);
+        } else {
+          onError(res.error);
+        }
+      });
+    </script>
+  </body>
+</html>
