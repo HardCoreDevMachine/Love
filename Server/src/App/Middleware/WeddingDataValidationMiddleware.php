@@ -20,6 +20,7 @@ class WeddingDataValidationMiddleware implements MiddlewareInterface
 
     public function __construct()
     {
+        $this->validator = Validation::createValidator();
         $this->constraints = new Assert\Collection([
             'womanName'      => [
                 new Assert\NotBlank(),
@@ -44,11 +45,21 @@ class WeddingDataValidationMiddleware implements MiddlewareInterface
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        //TODO: Clean from html chars and other shit
-        $body = $request->getParsedBody();
-        $validator = Validation::createValidator();
-        if (!$validator->validate($body, $this->constraints)) {
-            return new JsonResponse('Отправлены некоректные данные', StatusCodeInterface::STATUS_BAD_REQUEST);
+        $body = json_decode((string)$request->getBody(), true);
+        $violations = $this->validator->validate($body, $this->constraints);
+
+
+        // Проверяем наличие ошибок
+        if (count($violations) > 0) {
+            $errors = [];
+            foreach ($violations as $violation) {
+                $errors[] = $violation->getMessage();
+            }
+
+            return new JsonResponse([
+                'message' => 'send an encorrect data',
+                'error' => $errors,
+            ], StatusCodeInterface::STATUS_BAD_REQUEST);
         }
         return $handler->handle($request);
     }

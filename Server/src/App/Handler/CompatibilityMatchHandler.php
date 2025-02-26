@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Handler;
 
+use App\Enum\GenderEnum;
+use App\Helper\compabilityHelper;
+use App\Dto\Person;
 use Fig\Http\Message\StatusCodeInterface;
 use Laminas\Diactoros\Response\EmptyResponse;
 use Laminas\Diactoros\Response\JsonResponse;
@@ -17,8 +20,8 @@ class CompatibilityMatchHandler implements RequestHandlerInterface
     {
         session_start();
         $potentialPair = [];
-        foreach ($_SESSION['man'] as $man) {
-            foreach ($_SESSION['woman'] as $woman) {
+        foreach ($_SESSION[GenderEnum::MAN->value] as $man) {
+            foreach ($_SESSION[GenderEnum::WOMAN->value] as $woman) {
                 if (
                     !isset($woman['name'])
                     || !isset($woman['age'])
@@ -28,13 +31,16 @@ class CompatibilityMatchHandler implements RequestHandlerInterface
                     continue;
                 }
 
+                $woman = new Person($woman['name'], (int)$woman['age']);
+                $man = new Person($man['name'], (int)$man['age']);
+
+
                 if (
-                    abs(strlen($woman['name']) - strlen($man['name'])) < 10
-                    && abs($woman['age'] - $man['age']) < 10
+                    compabilityHelper::compabilityCheck($woman, $man)
                 ) {
                     $potentialPair[] = [
-                        'man' => $man,
-                        'woman' => $woman,
+                        'woman' => $woman->toArray(),
+                        'man' => $man->toArray(),
                     ];
                 }
             }
@@ -44,6 +50,6 @@ class CompatibilityMatchHandler implements RequestHandlerInterface
             return new EmptyResponse(StatusCodeInterface::STATUS_NO_CONTENT);
         }
 
-        return new JsonResponse($potentialPair, StatusCodeInterface::STATUS_OK);
+        return new JsonResponse(['potential_pairs' => $potentialPair], StatusCodeInterface::STATUS_OK);
     }
 }

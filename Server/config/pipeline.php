@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Middleware\CorsMiddleware;
 use Laminas\Stratigility\Middleware\ErrorHandler;
 use Mezzio\Application;
 use Mezzio\Handler\NotFoundHandler;
@@ -20,6 +21,7 @@ use Psr\Container\ContainerInterface;
  */
 
 return function (Application $app, MiddlewareFactory $factory, ContainerInterface $container): void {
+    
     // The error handler should be the first (most outer) middleware to catch
     // all Exceptions.
     $app->pipe(ErrorHandler::class);
@@ -42,6 +44,9 @@ return function (Application $app, MiddlewareFactory $factory, ContainerInterfac
     // - $app->pipe('/api', $apiMiddleware);
     // - $app->pipe('/docs', $apiDocMiddleware);
     // - $app->pipe('/files', $filesMiddleware);
+    $app->pipe(CorsMiddleware::class);
+
+
 
     // Register the routing middleware in the middleware pipeline.
     // This middleware registers the Mezzio\Router\RouteResult request attribute.
@@ -70,8 +75,11 @@ return function (Application $app, MiddlewareFactory $factory, ContainerInterfac
     // Register the dispatch middleware in the middleware pipeline
     $app->pipe(DispatchMiddleware::class);
 
+
+
     // At this point, if no Response is returned by any middleware, the
     // NotFoundHandler kicks in; alternately, you can provide other fallback
     // middleware to execute.
     $app->pipe(NotFoundHandler::class);
+
 };

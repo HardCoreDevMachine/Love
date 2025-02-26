@@ -15,6 +15,7 @@ return [
         'factories' => [
             App\Handler\CompatibilityCheckHandler::class => App\Handler\CompatibilityCheckHandlerFactory::class,
             App\Handler\CompatibilityMatchHandler::class => App\Handler\CompatibilityMatchHandlerFactory::class,
+            App\Middleware\CorsMiddleware::class => App\Middleware\CorsMiddlewareFactory::class,
             App\WeddingDataValidationMiddleware::class => App\WeddingDataValidationMiddlewareFactory::class,
         ],
     ],

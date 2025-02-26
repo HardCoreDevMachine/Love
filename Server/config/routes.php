@@ -42,8 +42,9 @@ return static function (Application $app, MiddlewareFactory $factory, ContainerI
 
     //Какая тема
     $app->post(
-        '/api/compatibility/check/',
+        '/api/compatibility/check',
         [
+          //  App\Middleware\CorsMiddleware::class,
             App\Middleware\WeddingDataValidationMiddleware::class,
             App\Handler\CompatibilityCheckHandler::class
         ],
@@ -52,7 +53,7 @@ return static function (Application $app, MiddlewareFactory $factory, ContainerI
 
     //Какая тема
     $app->post(
-        '/api/compatibility/match/',
+        '/api/compatibility/match',
         App\Handler\CompatibilityMatchHandler::class,
         'api.compatibility.match'
     );

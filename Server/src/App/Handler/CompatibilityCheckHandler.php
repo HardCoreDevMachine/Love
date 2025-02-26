@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Handler;
 
+use App\Enum\GenderEnum;
+use App\Helper\CompabilityHelper;
+use App\Dto\Person;
 use Fig\Http\Message\StatusCodeInterface;
 use Laminas\Diactoros\Response\JsonResponse;
 use Psr\Http\Message\ResponseInterface;
@@ -15,25 +18,17 @@ class CompatibilityCheckHandler implements RequestHandlerInterface
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
         session_start();
-        $body = $request->getParsedBody();
+        $body = json_decode((string)$request->getBody(), true);
 
-        $compatibility = (
-            abs(strlen($body['womanName']) - strlen($body['manName'])) < 10
-            && abs($body['womanAge'] - $body['manAge']) < 10
-        );
+        $woman = new Person($body['womanName'], (int)$body['womanAge']);
+        $man = new Person($body['manName'], (int)$body['manAge']);
+        $compatibility = CompabilityHelper::compabilityCheck($woman, $man);
 
         //TODO: Нужно ещё проверку на недопуск повторений орагнизовать
         if (!$compatibility) {
-            $_SESSION['woman'][] = [
-                'name' => $body['womanName'],
-                'age' => $body['womanAge']
-            ];
-            $_SESSION['man'][] = [
-                'name' => $body['manName'],
-                'age' => $body['manAge']
-            ];
+            $_SESSION[GenderEnum::WOMAN->value][] = $woman->toArray();
+            $_SESSION[GenderEnum::MAN->value][] = $man->toArray();
         }
-
         return new JsonResponse(['compability' => $compatibility], StatusCodeInterface::STATUS_OK);
     }
 }

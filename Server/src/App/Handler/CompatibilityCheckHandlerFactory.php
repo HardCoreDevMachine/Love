@@ -8,7 +8,7 @@ use Psr\Container\ContainerInterface;
 
 class CompatibilityCheckHandlerFactory
 {
-    public function __invoke(ContainerInterface $container) : CompatibilityCheckHandler
+    public function __invoke(ContainerInterface $container): CompatibilityCheckHandler
     {
         return new CompatibilityCheckHandler();
     }
