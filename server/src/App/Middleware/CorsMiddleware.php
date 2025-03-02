@@ -11,10 +11,13 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 class CorsMiddleware implements MiddlewareInterface
 {
-    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $response = $handler->handle($request);
-        //TODO: Сделать автоподбор метода заголовка по содержимому запроса
-        return $response->withHeader('Access-Control-Allow-Origin', '*')->withHeader('Access-Control-Allow-Methods', $request->getMethod());
+
+        return $response
+            ->withHeader('Access-Control-Allow-Origin', '*')
+            ->withHeader('Access-Control-Allow-Headers', '*')
+            ->withHeader('Access-Control-Allow-Methods', $request->getMethod());
     }
 }
