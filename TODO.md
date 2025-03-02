@@ -4,8 +4,8 @@
 - [ ] Подключить docker и docker-compose
 - [x] Подключить phpUnit
 - [x] Подключить конфигурацию для xDebug под vs code
-- [ ] Подключить svelte
+- [x] Подключить svelte
 - [x] Перевести на php8.3
 - [x] Разделите логику на клиент и сервер
-- [ ] postCss
-- [ ] wepback
+- [ ] tailwind
+- [x] vite
