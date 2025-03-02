@@ -22,18 +22,10 @@ class WeddingDataValidationMiddleware implements MiddlewareInterface
     {
         $this->validator = Validation::createValidator();
         $this->constraints = new Assert\Collection([
-            'womanName'      => [
+            'name'      => [
                 new Assert\NotBlank(),
             ],
-            'womanAge' => [
-                new Assert\NotBlank(),
-                new Assert\Type('numeric'),
-                new Assert\GreaterThanOrEqual(18),
-            ],
-            'manName'      => [
-                new Assert\NotBlank(),
-            ],
-            'manAge' => [
+            'age' => [
                 new Assert\NotBlank(),
                 new Assert\Type('numeric'),
                 new Assert\GreaterThanOrEqual(18),
@@ -46,21 +38,22 @@ class WeddingDataValidationMiddleware implements MiddlewareInterface
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $body = json_decode((string)$request->getBody(), true);
-        $violations = $this->validator->validate($body, $this->constraints);
+        foreach ($body as $gender) {
+            $violations = $this->validator->validate($gender, $this->constraints);
 
-
-        // Проверяем наличие ошибок
-        if (count($violations) > 0) {
-            $errors = [];
-            foreach ($violations as $violation) {
-                $errors[] = $violation->getMessage();
+            // Проверяем наличие ошибок
+            if (count($violations) > 0) {
+                $errors = [];
+                foreach ($violations as $violation) {
+                    $errors[] = $violation->getMessage();
+                }
+                return new JsonResponse([
+                    'message' => 'send an encorrect data',
+                    'error' => $errors,
+                ], StatusCodeInterface::STATUS_BAD_REQUEST);
             }
-
-            return new JsonResponse([
-                'message' => 'send an encorrect data',
-                'error' => $errors,
-            ], StatusCodeInterface::STATUS_BAD_REQUEST);
         }
+
         return $handler->handle($request);
     }
 }

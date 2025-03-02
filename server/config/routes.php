@@ -44,7 +44,6 @@ return static function (Application $app, MiddlewareFactory $factory, ContainerI
     $app->post(
         '/api/compatibility/check',
         [
-          //  App\Middleware\CorsMiddleware::class,
             App\Middleware\WeddingDataValidationMiddleware::class,
             App\Handler\CompatibilityCheckHandler::class
         ],

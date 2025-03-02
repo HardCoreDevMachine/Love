@@ -5,7 +5,6 @@ namespace App\Helper;
 
 class CompabilityHelper
 {
-
     public static function compabilityCheck($woman, $man): bool
     {
         return (
