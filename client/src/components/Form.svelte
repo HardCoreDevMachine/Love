@@ -40,12 +40,9 @@
     }
 
     toggleLoader();
-    const res = await await fetch(
-      "http://localhost:8080/api/compatibility/check/",
-      {
-        method: "POST",
-      }
-    );
+    const res = await await fetch(`${SERVER_URL}/api/compatibility/check/`, {
+      method: "POST",
+    });
 
     toggleLoader();
     if (res.status === 200 && event.target instanceof HTMLFormElement) {
