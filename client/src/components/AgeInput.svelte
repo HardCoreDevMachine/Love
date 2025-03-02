@@ -1,5 +1,5 @@
 <script lang="ts">
-  let {name,value} = $props();
+  let { value } = $props();
 </script>
 
-<input type="number" name={name} bind:value required />
+<input type="number" bind:value required />
