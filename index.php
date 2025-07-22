@@ -1,6 +1,5 @@
 <?php
 //Это только MVP - сильно не осуждать
-var_dump(['post' => $_POST]);
 /**
  * Check potential couple compatibility
  *
@@ -115,7 +114,6 @@ if (!empty($_POST)) {
 
         session_write_close();
     }
-    var_dump($_SESSION);
 }
 
 ?>
