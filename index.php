@@ -37,6 +37,20 @@ if (!empty($_POST)) {
         echo $e->getMessage();
         die;
     }
+    if (!$result) {
+        session_start();
+
+        $_SESSION['free_husbands'][] = [
+            'name' => $_POST['husband-name'],
+            'age' => $_POST['husband-age'],
+        ];
+        $_SESSION['free_wife'][] = [
+            'name' => $_POST['wife-name'],
+            'age' => $_POST['wife-age'],
+        ];
+
+        session_write_close();
+    }
 }
 ?>
 
