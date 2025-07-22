@@ -1,36 +1,43 @@
 <?php
-//TODO: Это только MVP - сильно не осуждать
-//TODO: Избаиться от ??
-function main(): void
+//Это только MVP - сильно не осуждать
+
+/**
+ * Main page function
+ * @param array $body
+ * @return bool
+ */
+function main(array $body): bool
 {
-    $post = $_POST;
-
-    if (empty($post)) {
-        return;
-    }
-
-    var_dump($post);
     $formHolderNames = [
         'wafu-name',
         'wafu-age',
         'husband-name',
-        'husband-name',
+        'husband-age',
     ];
 
-    array_walk($formHolderNames, static function ($name) use ($post): void {
-        if (!isset($_POST[$name])) {
+    array_walk($formHolderNames, static function ($name) use ($body): void {
+        if (!isset($body[$name]) || empty($body[$name])) {
             throw new Exception('Недопустипо передовать незаполненное поле');
         }
     });
 
+    $accepteableDifference = 10;
 
-    if (count($post)) {
-
-    }
-
+    return
+        abs(mb_strlen($body['husband-name']) - mb_strlen($body['wafu-name'])) <= $accepteableDifference
+        && abs($body['husband-age'] - $body['wafu-age']) <= $accepteableDifference;
 }
 
-main();
+if (!empty($_POST)) {
+    try {
+        $result = main($_POST);
+        var_dump($_POST);
+    } catch (Exception $e) {
+        http_response_code(400);
+        echo $e->getMessage();
+        die;
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -43,6 +50,8 @@ main();
 </head>
 
 <body>
+    <?php if (!isset($result) && $_SERVER['REQUEST_METHOD'] === 'GET') {?>
+
     <h1>ЗАДАНИЕ</h1>
     <pre>
     создать веб форму реализовать игру
@@ -56,13 +65,11 @@ main();
     если симпатии нет то картинка произвольного вида
     </pre>
     <form action="<?php $_SERVER['PHP_SELF'] ?>" method="post">
-
         <p>Жена</p>
         <label for="">Имя</label>
         <input type="text" name="wafu-name" value="<?=$wafuName ?? null ?>">
         <label for="">возвраста</label>
         <input type="number" name="wafu-age" value="<?=$wafuAge ?? null ?>">
-
 
         <p>Муж</p>
         <label for="">Имя</label>
@@ -71,6 +78,16 @@ main();
         <input type="number" name="husband-age" value="<?=$husbandAge ?? null?>">
         <br>
         <input type="submit">
+    </form>
+    <?php } elseif ($result) {?>
+        <h1>Ты победил</h1>
+        <img src="/win.png" alt="">
+    <?php } else {?>
+        <h1>Ты проиграл</h1>
+        <img src="/ultra-win.png" alt="">
+    <?php } ?>
+        <form action="<?php echo $_SERVER['PHP_SELF'] ?>" method="get">
+        <input type="submit" value="Попробовать снова">
     </form>
 </body>
 
