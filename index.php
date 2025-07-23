@@ -1,44 +1,45 @@
 <?php
 //Это только MVP - сильно не осуждать
+const STATUS_BAD_REQUEST = 400;
+
+class PersonalDataDto
+{
+    public function __construct(
+        public readonly string $name,
+        public readonly int $age,
+    ) {
+    }
+}
+
+class ValidationException extends Exception
+{
+}
+
 /**
- * Check potential couple compatibility
+ * Check couple compatibility
  *
- * @todo Replace array with a proper DTO object for better type safety and structure.
- *
- * @param array{
- *     "wife-name": string,
- *     "wife-age": int,
- *     "husband-name": string,
- *     "husband-age": int
- * } $pairData Associative array containing partner data.
- * @return bool Returns `true` on success, `false` on failure.
+ * @param PersonalDataDto $wife
+ * @param PersonalDataDto $husband
+ * @return bool
  */
-function checkPairCompatibility(array $pairData): bool
+function checkPairCompatibility(PersonalDataDto $wife, PersonalDataDto $husband): bool
 {
     $acceptableDifference = 10;
 
     return
-        abs(mb_strlen($pairData['husband-name']) - mb_strlen($pairData['wife-name'])) <= $acceptableDifference
-        && abs($pairData['husband-age'] - $pairData['wife-age']) <= $acceptableDifference;
+        abs(mb_strlen($husband->name) - mb_strlen($wife->name)) <= $acceptableDifference
+        && abs($husband->age - $wife->age) <= $acceptableDifference;
 }
 
 /**
  * Finds potential pairs from given arrays of available husbands and wives.
- *
- * @todo Replace array structures with DTOs for better type safety and readability.
- *       Example: Use `Husband[]` and `Wife[]` instead of raw arrays.
  *
  * @param array{
  *     free_husband: array<array-key, array{name: string, age: int}>,
  *     free_wife: array<array-key, array{name: string, age: int}>
  * } $people Associative array containing two sub-arrays of potential candidates
  *
- * @return array<array{
- *     wife-name: string,
- *     wife-age: int,
- *     husband-name: string,
- *     husband-age: int
- * }> Returns an array of possible pair combinations
+ * @return PersonalDataDto[] Returns an array of possible pair combinations
  *
  * @throws InvalidArgumentException If input arrays don't match expected structure
  */
@@ -48,23 +49,23 @@ function findPotentialPair(array $people): array
         return [];
     }
 
-    $result = [];
+    $pairs = [];
 
     foreach ($people['free_wife'] as $wife) {
         foreach ($people['free_husbands'] as $husband) {
-            if (checkPairCompatibility([...$wife, ...$husband])) {
-                $result[] = [...$wife, ...$husband];
+            $wife = new PersonalDataDto($wife['name'], $wife['age']);
+            $husband = new PersonalDataDto($husband['name'], $husband['age']);
+            if (checkPairCompatibility($wife, $husband)) {
+                $pairs[] = ['wife' => $wife, 'husband' => $husband];
             }
         }
     }
 
-    return $result;
+    return $pairs;
 }
 
 /**
- * Summary of gameFormValidation
- *
- * @todo Create another validation exception
+ * validate form data for game rule
  *
  * @param array $body
  * @return void
@@ -74,15 +75,15 @@ function findPotentialPair(array $people): array
 function gameFormValidation(array $body): void
 {
     $formHolderNames = [
-        'wife-name',
-        'wife-age',
-        'husband-name',
-        'husband-age',
+        'wife-name' => 'string',
+        'wife-age' => 'int',
+        'husband-name' => 'string',
+        'husband-age' => 'int',
     ];
 
-    array_walk($formHolderNames, static function ($name) use ($body): void {
-        if (!isset($body[$name]) || empty($body[$name])) {
-            throw new Exception('Недопустимо передавать незаполненное поле');
+    array_walk($formHolderNames, static function ($name, $type) use ($body): void {
+        if (!isset($body[$name]) || empty($body[$name]) && gettype($body[$name]) === $type) {
+            throw new ValidationException('Недопустимо передавать незаполненное поле');
         }
     });
 
@@ -92,10 +93,14 @@ if (!empty($_POST)) {
 
     $body = $_POST;
     gameFormValidation($body);
+
+    $wife = new PersonalDataDto($body['wife-name'], $body['wife-name']);
+    $husband = new PersonalDataDto($body['husband-name'], $body['husband-name']);
+
     try {
-        $result = checkPairCompatibility($body);
+        $result = checkPairCompatibility($wife, $husband);
     } catch (Exception $e) {
-        http_response_code(400);
+        http_response_code(STATUS_BAD_REQUEST);
         echo $e->getMessage();
         die;
     }
@@ -103,13 +108,15 @@ if (!empty($_POST)) {
     if (!$result) {
         session_start();
 
-        $_SESSION['free_husbands'][] = [
-            'name' => $_POST['husband-name'],
-            'age' => $_POST['husband-age'],
-        ];
+        //I scared of object serialization so just data in array
         $_SESSION['free_wife'][] = [
-            'name' => $_POST['wife-name'],
-            'age' => $_POST['wife-age'],
+            'name' => $wife->name,
+            'age' => $wife->age,
+        ];
+
+        $_SESSION['free_husbands'][] = [
+            'name' => $husband->name,
+            'age' => $husband->age,
         ];
 
         session_write_close();
