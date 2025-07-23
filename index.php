@@ -45,17 +45,11 @@ function checkPairCompatibility(PersonalDataDto $wife, PersonalDataDto $husband)
  *     wife: PersonalDataDto,
  *     husband: PersonalDataDto
  * }> Returns an array of compatible pairs where each pair contains DTO objects
- *
- * @throws InvalidArgumentException If input structure is invalid or required keys are missing
  */
 function findPotentialPair(array $people): array
 {
     if (empty($people)) {
         return [];
-    }
-
-    if (!isset($people['free_wife'], $people['free_husbands'])) {
-        throw new InvalidArgumentException('Отсутствуют поля с женихами или невестами');
     }
 
     $pairs = [];
@@ -78,23 +72,17 @@ function findPotentialPair(array $people): array
 }
 
 /**
- * validate form data for game rule
+ * Validate form data for game rule
  *
  * @param array $body
+ * @param array $rules
  * @return void
  *
  * @throws Exception
  */
-function dataValidation(array $body): void
+function dataValidation(array $body, array $rules): void
 {
-    $formHolderNames = [
-        'wife-name' => 'string',
-        'wife-age' => 'int',
-        'husband-name' => 'string',
-        'husband-age' => 'int',
-    ];
-
-    array_walk($formHolderNames, static function ($type, $name) use ($body): void {
+    array_walk($rules, static function ($type, $name) use ($body): void {
         if (!isset($body[$name]) || empty($body[$name]) && gettype($body[$name]) === $type) {
             throw new ValidationException('Недопустимо передавать незаполненное поле - ' . $name . ' типа -' . gettype($body[$name]));
         }
@@ -104,13 +92,24 @@ function dataValidation(array $body): void
 if (!empty($_POST)) {
     if (isset($_POST['cache-calc'])) {
         session_start();
+        $formHolderNames = [
+            'free_wife' => 'array',
+            'free_husbands' => 'array',
+        ];
+        dataValidation($body, $formHolderNames);
         $pairs = findPotentialPair($_SESSION);
         session_write_close();
     }
 
     try {
         $body = $_POST;
-        dataValidation($body);
+        $formHolderNames = [
+            'wife-name' => 'string',
+            'wife-age' => 'int',
+            'husband-name' => 'string',
+            'husband-age' => 'int',
+        ];
+        dataValidation($body, $formHolderNames);
         $wife = new PersonalDataDto($body['wife-name'], $body['wife-age']);
         $husband = new PersonalDataDto($body['husband-name'], $body['husband-age']);
 
@@ -202,7 +201,7 @@ if (!empty($_POST)) {
 
             <button type="submit" value="form-calc">Посчитать</button>
             <input type="submit" name="cache-calc" value="Посчитать в кеше">
-            <input type="reset" name="reset-btn" value="Очистить" required>
+            <input type="reset" name="reset-btn" value="Очистить">
         </form>
     <?php } elseif ($result) { ?>
         <h1>Ты победил</h1>
