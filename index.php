@@ -54,7 +54,7 @@ function findPotentialPair(array $people): array
         return [];
     }
 
-    if (!isset($people['free_wife'], $people['free_husband'])) {
+    if (!isset($people['free_wife'], $people['free_husbands'])) {
         throw new InvalidArgumentException('Отсутствуют поля с женихами или невестами');
     }
 
@@ -85,7 +85,7 @@ function findPotentialPair(array $people): array
  *
  * @throws Exception
  */
-function gameFormValidation(array $body): void
+function dataValidation(array $body): void
 {
     $formHolderNames = [
         'wife-name' => 'string',
@@ -102,15 +102,20 @@ function gameFormValidation(array $body): void
 }
 
 if (!empty($_POST)) {
+    if (isset($_POST['cache-calc'])) {
+        session_start();
+        $pairs = findPotentialPair($_SESSION);
+        session_write_close();
+    }
+
     try {
         $body = $_POST;
-        var_dump($body);
-        gameFormValidation($body);
+        dataValidation($body);
         $wife = new PersonalDataDto($body['wife-name'], $body['wife-age']);
         $husband = new PersonalDataDto($body['husband-name'], $body['husband-age']);
 
         $result = checkPairCompatibility($wife, $husband);
-    } catch (Exception $e) {
+    } catch (Throwable $e) {
         http_response_code(STATUS_BAD_REQUEST);
         echo $e->getMessage();
         die;
@@ -196,15 +201,22 @@ if (!empty($_POST)) {
             <input type="number" name="husband-age" placeholder="Возраст мужа" required>
 
             <button type="submit" value="form-calc">Посчитать</button>
-            <button type="submit" value="cache-calc">Посчитать что валяется в кеше</button>
+            <input type="submit" name="cache-calc" value="Посчитать в кеше">
             <input type="reset" name="reset-btn" value="Очистить" required>
         </form>
     <?php } elseif ($result) { ?>
         <h1>Ты победил</h1>
-        <img src="/win.png" alt="">
+        <img src="/assets/win.png" alt="">
+        <?php
+        if (!empty($pairs))
+            foreach ($pairs as $pair) {
+                ?>
+                <p>Жена: <?= $pair['wife']->name ?></p>
+                <p>Муж: <?= $pair['husband']->name ?></p>
+            <?php } ?>
     <?php } else { ?>
         <h1>Ты проиграл</h1>
-        <img src="/ultra-win.png" alt="">
+        <img src="/assets/ultra-win.png" alt="">
     <?php } ?>
 </body>
 
