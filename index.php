@@ -210,6 +210,7 @@ if (!empty($_POST)) {
         if (!empty($pairs))
             foreach ($pairs as $pair) {
                 ?>
+                <!-- TODO: Выглядет ужасно вынести в dto -->
                 <p>Жена: <?= $pair['wife']->name ?></p>
                 <p>Муж: <?= $pair['husband']->name ?></p>
             <?php } ?>
