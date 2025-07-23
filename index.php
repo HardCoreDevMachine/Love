@@ -32,31 +32,44 @@ function checkPairCompatibility(PersonalDataDto $wife, PersonalDataDto $husband)
 }
 
 /**
- * Finds potential pairs from given arrays of available husbands and wives.
+ * Finds compatible pairs from given arrays of available husbands and wives.
  *
  * @param array{
  *     free_husband: array<array-key, array{name: string, age: int}>,
  *     free_wife: array<array-key, array{name: string, age: int}>
- * } $people Associative array containing two sub-arrays of potential candidates
+ * } $people Associative array containing:
+ *             - free_husband: List of available husbands
+ *             - free_wife: List of available wives
  *
- * @return PersonalDataDto[] Returns an array of possible pair combinations
+ * @return array<array{
+ *     wife: PersonalDataDto,
+ *     husband: PersonalDataDto
+ * }> Returns an array of compatible pairs where each pair contains DTO objects
  *
- * @throws InvalidArgumentException If input arrays don't match expected structure
+ * @throws InvalidArgumentException If input structure is invalid or required keys are missing
  */
 function findPotentialPair(array $people): array
 {
-    if (count($people) === 0) {
+    if (empty($people)) {
         return [];
+    }
+
+    if (!isset($people['free_wife'], $people['free_husband'])) {
+        throw new InvalidArgumentException('Отсутствуют поля с женихами или невестами');
     }
 
     $pairs = [];
 
-    foreach ($people['free_wife'] as $wife) {
-        foreach ($people['free_husbands'] as $husband) {
-            $wife = new PersonalDataDto($wife['name'], $wife['age']);
-            $husband = new PersonalDataDto($husband['name'], $husband['age']);
+    foreach ($people['free_wife'] as $wifeData) {
+        foreach ($people['free_husband'] as $husbandData) {
+            $wife = new PersonalDataDto($wifeData['name'], $wifeData['age']);
+            $husband = new PersonalDataDto($husbandData['name'], $husbandData['age']);
+
             if (checkPairCompatibility($wife, $husband)) {
-                $pairs[] = ['wife' => $wife, 'husband' => $husband];
+                $pairs[] = [
+                    'wife' => $wife,
+                    'husband' => $husband
+                ];
             }
         }
     }
@@ -81,23 +94,21 @@ function gameFormValidation(array $body): void
         'husband-age' => 'int',
     ];
 
-    array_walk($formHolderNames, static function ($name, $type) use ($body): void {
+    array_walk($formHolderNames, static function ($type, $name) use ($body): void {
         if (!isset($body[$name]) || empty($body[$name]) && gettype($body[$name]) === $type) {
-            throw new ValidationException('Недопустимо передавать незаполненное поле');
+            throw new ValidationException('Недопустимо передавать незаполненное поле - ' . $name . ' типа -' . gettype($body[$name]));
         }
     });
-
 }
 
 if (!empty($_POST)) {
-
-    $body = $_POST;
-    gameFormValidation($body);
-
-    $wife = new PersonalDataDto($body['wife-name'], $body['wife-name']);
-    $husband = new PersonalDataDto($body['husband-name'], $body['husband-name']);
-
     try {
+        $body = $_POST;
+        var_dump($body);
+        gameFormValidation($body);
+        $wife = new PersonalDataDto($body['wife-name'], $body['wife-age']);
+        $husband = new PersonalDataDto($body['husband-name'], $body['husband-age']);
+
         $result = checkPairCompatibility($wife, $husband);
     } catch (Exception $e) {
         http_response_code(STATUS_BAD_REQUEST);
@@ -133,21 +144,27 @@ if (!empty($_POST)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <style>
+        :root {
+            --main-color: #fe7f2d;
+            --background-color: #233d4d;
+        }
+
         * {
-            color: #fe7f2d;
-            background-color: #233d4d;
+            color: var(--main-color);
+            background-color: var(--background-color);
             font-family: Verdana, Geneva, sans-serif;
         }
 
         input {
             margin-top: 0.5rem;
             outline-width: 0;
+            border-color: var(--main-color);
         }
 
         input::placeholder {
             font-weight: bold;
             opacity: 0.5;
-            color: #fe7f2d;
+            color: var(--main-color);
         }
     </style>
 </head>
@@ -171,16 +188,16 @@ if (!empty($_POST)) {
         </p>
         <form action="<?php $_SERVER['PHP_SELF'] ?>" method="post">
             <p>Жена</p>
-            <input type="text" name="wife-name" placeholder="Имя жены">
-            <input type="number" name="wife-age" placeholder="Возраст жены">
+            <input type="text" name="wife-name" placeholder="Имя жены" required>
+            <input type="number" name="wife-age" placeholder="Возраст жены" required>
 
             <p>Муж</p>
-            <input type="text" name="husband-name" placeholder="Имя мужа">
-            <input type="number" name="husband-age" placeholder="Возраст мужа">
+            <input type="text" name="husband-name" placeholder="Имя мужа" required>
+            <input type="number" name="husband-age" placeholder="Возраст мужа" required>
 
-            <button type="submit" value="form-calc">Проверить совместимость</button>
-            <button type="submit" value="cache-calc">Рассчитать совместимость бедолаг из кеша</button>
-            <input type="reset" name="reset-btn" value="Очистить">
+            <button type="submit" value="form-calc">Посчитать</button>
+            <button type="submit" value="cache-calc">Посчитать что валяется в кеше</button>
+            <input type="reset" name="reset-btn" value="Очистить" required>
         </form>
     <?php } elseif ($result) { ?>
         <h1>Ты победил</h1>
