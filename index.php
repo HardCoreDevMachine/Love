@@ -207,13 +207,14 @@ if (!empty($_POST)) {
         <h1>Ты победил</h1>
         <img src="/assets/win.png" alt="">
         <?php
-        if (!empty($pairs))
+        if (!empty($pairs)) {
             foreach ($pairs as $pair) {
                 ?>
-                <!-- TODO: Выглядет ужасно вынести в dto -->
+                <!-- TODO: Выглядит ужасно вынести в dto -->
                 <p>Жена: <?= $pair['wife']->name ?></p>
                 <p>Муж: <?= $pair['husband']->name ?></p>
-            <?php } ?>
+            <?php }
+            } ?>
     <?php } else { ?>
         <h1>Ты проиграл</h1>
         <img src="/assets/ultra-win.png" alt="">
