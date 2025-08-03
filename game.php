@@ -1,7 +1,12 @@
 <?php
 
+ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
+
 //Это только MVP - сильно не осуждать
 const STATUS_BAD_REQUEST = 400;
+const STATUS_NO_CONTENT = 204;
 
 class PersonalDataDto
 {
@@ -90,80 +95,59 @@ function dataValidation(array $body, array $rules): void
     });
 }
 
-if (!empty($_POST)) {
-    if (isset($_POST['cache-calc'])) {
-        session_start();
-        $formHolderNames = [
-            'free_wife' => 'array',
-            'free_husbands' => 'array',
-        ];
-        dataValidation($body, $formHolderNames);
-        $pairs = findPotentialPair($_SESSION);
-        session_write_close();
-    }
+$body = json_decode(file_get_contents('php://input'), true);
+$response = [];
 
-    try {
-        $body = $_POST;
-        $formHolderNames = [
-            'wife-name' => 'string',
-            'wife-age' => 'int',
-            'husband-name' => 'string',
-            'husband-age' => 'int',
-        ];
-        dataValidation($body, $formHolderNames);
-        $wife = new PersonalDataDto($body['wife-name'], $body['wife-age']);
-        $husband = new PersonalDataDto($body['husband-name'], $body['husband-age']);
-
-        $result = checkPairCompatibility($wife, $husband);
-    } catch (Throwable $e) {
-        http_response_code(STATUS_BAD_REQUEST);
-        echo $e->getMessage();
-        die;
-    }
-
-    if (!$result) {
-        session_start();
-
-        //I scared of object serialization so just data in array
-        $_SESSION['free_wife'][] = [
-            'name' => $wife->name,
-            'age' => $wife->age,
-        ];
-
-        $_SESSION['free_husbands'][] = [
-            'name' => $husband->name,
-            'age' => $husband->age,
-        ];
-
-        session_write_close();
-    }
+if (empty($body)) {
+    http_response_code(STATUS_NO_CONTENT);
+    return;
 }
 
-?>
+if (isset($_POST['cache-calc'])) {
+    session_start();
+    $formHolderNames = [
+        'free_wife' => 'array',
+        'free_husbands' => 'array',
+    ];
+    dataValidation($body, $formHolderNames);
+    $pairs = findPotentialPair($_SESSION);
+    session_write_close();
+}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <?php if ($result) { ?>
-        <h1>Ты победил</h1>
-        <img src="/assets/win.png" alt="">
-        <?php
-        if (!empty($pairs)) {
-            foreach ($pairs as $pair) {
-                ?>
-                <!-- TODO: Выглядит ужасно вынести в dto -->
-                <p>Жена: <?= $pair['wife']->name ?></p>
-                <p>Муж: <?= $pair['husband']->name ?></p>
-            <?php }
-            } ?>
-    <?php } else { ?>
-        <h1>Ты проиграл</h1>
-        <img src="/assets/ultra-win.png" alt="">
-    <?php } ?>
-</body>
-</html>
+try {
+    $formHolderNames = [
+        'wifeName' => 'string',
+        'wifeAge' => 'int',
+        'husbandName' => 'string',
+        'husbandAge' => 'int',
+    ];
+    dataValidation($body, $formHolderNames);
+    $wife = new PersonalDataDto($body['wifeName'], $body['wifeAge']);
+    $husband = new PersonalDataDto($body['husbandName'], $body['husbandAge']);
+
+    $result = checkPairCompatibility($wife, $husband);
+    $response['success'] = $result;
+} catch (Throwable $e) {
+    http_response_code(STATUS_BAD_REQUEST);
+    $response['error'] = $e->getMessage();
+    die;
+}
+
+if (!$result) {
+    session_start();
+
+    //I scared of object serialization so just data in array
+    $_SESSION['free_wife'][] = [
+        'name' => $wife->name,
+        'age' => $wife->age,
+    ];
+
+    $_SESSION['free_husbands'][] = [
+        'name' => $husband->name,
+        'age' => $husband->age,
+    ];
+
+    session_write_close();
+}
+
+echo json_encode($response);
