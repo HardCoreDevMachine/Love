@@ -81,13 +81,15 @@
         function submitForm(useCache = false) {
           const formData = {
             wifeName: form.querySelector('[name="wife-name"]').value,
-            wifeAge: form.querySelector('[name="wife-age"]').value,
+            wifeAge: Number(form.querySelector('[name="wife-age"]').value),
             husbandName: form.querySelector('[name="husband-name"]').value,
-            husbandAge: form.querySelector('[name="husband-age"]').value,
+            husbandAge: Number(
+              form.querySelector('[name="husband-age"]').value
+            ),
             useCache: useCache,
           };
 
-          fetch("/game.php", {
+          fetch("/api/game-form", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
