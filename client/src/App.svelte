@@ -1,47 +1,112 @@
 <script lang="ts">
-  import svelteLogo from './assets/svelte.svg'
-  import viteLogo from '/vite.svg'
-  import Counter from './lib/Counter.svelte'
-</script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("couple-form");
+        const submitBtn = document.getElementById("submit-btn");
+        const cacheSubmitBtn = document.getElementById("cache-submit-btn");
+        const resultContainer = document.getElementById("result-container");
 
-<main>
-  <div>
-    <a href="https://vite.dev" target="_blank" rel="noreferrer">
-      <img src={viteLogo} class="logo" alt="Vite Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank" rel="noreferrer">
-      <img src={svelteLogo} class="logo svelte" alt="Svelte Logo" />
-    </a>
-  </div>
-  <h1>Vite + Svelte</h1>
+        function submitForm(useCache = false) {
 
-  <div class="card">
-    <Counter />
-  </div>
+          const formData = {
+            wifeName: form?.querySelector('[name="wife-name"]')?.value,
+            wifeAge: Number(form?.querySelector('[name="wife-age"]')?.value),
+            husbandName: form?.querySelector('[name="husband-name"]')?.value,
+            husbandAge: Number(
+              form.querySelector('[name="husband-age"]').value
+            ),
+            useCache: useCache,
+          };
 
-  <p>
-    Check out <a href="https://github.com/sveltejs/kit#readme" target="_blank" rel="noreferrer">SvelteKit</a>, the official Svelte app framework powered by Vite!
-  </p>
+          fetch("/api/game-form", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formData),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              // Скрываем форму
+              form.style.display = "none";
+              message = data["success"] ? "Женаты" : "Не пара";
 
-  <p class="read-the-docs">
-    Click on the Vite and Svelte logos to learn more
-  </p>
-</main>
+              // Показываем результат (можно адаптировать под ваш формат ответа)
+              resultContainer.style.display = "block";
+              resultContainer.innerHTML = `<p>Результат: ${message ?? 'Не пара'}</p>`;
 
-<style>
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
-  }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-  }
-  .logo.svelte:hover {
-    filter: drop-shadow(0 0 2em #ff3e00aa);
-  }
-  .read-the-docs {
-    color: #888;
-  }
-</style>
+              // Или можно обработать данные более красиво, в зависимости от того, что возвращает сервер
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              alert("Произошла ошибка при отправке данных");
+            });
+        }
+
+        submitBtn.addEventListener("click", () => submitForm(false));
+        cacheSubmitBtn.addEventListener("click", () => submitForm(true));
+      });
+    </script>
+
+    <h1>ЗАДАНИЕ</h1>
+    <p>
+      создать веб форму реализовать игру удаленная симпатия которая позволяет
+      определить совместимость людей по их имени и по возрасту, если разница в
+      возрасте менее 10 лет и разница суммы букв в фио влюбленных менее 10,то
+      они подходят друг другу если условия не выполняются то не подходят друг
+      другу
+    </p>
+    <p>
+      в этой же странице реализовать многократный перебор спутников реализовать
+      кнопку очистки форм ввода возраста и фио и по новой ввести добавить фото
+      результата при удачной симпатии картинка с видом на загс если симпатии нет
+      то картинка произвольного вида
+    </p>
+    <form id="couple-form">
+      <p>Жена</p>
+      <input type="text" name="wife-name" placeholder="Имя жены" required />
+      <input
+        type="number"
+        name="wife-age"
+        placeholder="Возраст жены"
+        required
+      />
+
+      <p>Муж</p>
+      <input type="text" name="husband-name" placeholder="Имя мужа" required />
+      <input
+        type="number"
+        name="husband-age"
+        placeholder="Возраст мужа"
+        required
+      />
+
+      <button type="button" id="submit-btn" value="form-calc">Посчитать</button>
+      <button type="button" id="cache-submit-btn">Посчитать в кеше</button>
+      <input type="reset" value="Очистить" />
+    </form>
+
+    <div id="result-container" style="display: none"></div>
+    <style>
+      :root {
+        --main-color: #fe7f2d;
+        --background-color: #233d4d;
+      }
+
+      * {
+        color: var(--main-color);
+        background-color: var(--background-color);
+        font-family: Verdana, Geneva, sans-serif;
+      }
+
+      input {
+        margin-top: 0.5rem;
+        outline-width: 0;
+        border-color: var(--main-color);
+      }
+
+      input::placeholder {
+        font-weight: bold;
+        opacity: 0.5;
+        color: var(--main-color);
+      }
+    </style>
