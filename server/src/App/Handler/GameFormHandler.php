@@ -17,8 +17,6 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 class GameFormHandler implements RequestHandlerInterface
 {
-
-
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
         $formHolderRules = [

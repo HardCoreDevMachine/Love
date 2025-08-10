@@ -9,7 +9,7 @@ use App\Dto\PersonalDataDto;
 
 final class CoupleService
 {
-    const int ACCEPTABLE_DIFFERENCE = 10;
+    public const int ACCEPTABLE_DIFFERENCE = 10;
 
     /**
      * Check couple compatibility

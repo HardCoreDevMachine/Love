@@ -8,7 +8,7 @@ use Psr\Container\ContainerInterface;
 
 class GameFormHandlerFactory
 {
-    public function __invoke(ContainerInterface $container) : GameFormHandler
+    public function __invoke(ContainerInterface $container): GameFormHandler
     {
         return new GameFormHandler();
     }

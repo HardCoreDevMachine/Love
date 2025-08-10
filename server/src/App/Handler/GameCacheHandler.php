@@ -10,7 +10,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 class GameCacheHandler implements RequestHandlerInterface
 {
-    public function handle(ServerRequestInterface $request) : ResponseInterface
+    public function handle(ServerRequestInterface $request): ResponseInterface
     {
         // Create and return a response
     }

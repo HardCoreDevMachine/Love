@@ -30,7 +30,7 @@ final class ValidatorHelper
 
             // Проверка типа
             if (gettype($data[$name]) !== $type) {
-                throw new ValidationException('Поле ' . $name . ' должно быть типа ' . $type . ' А на самом деле - ' . gettype($data[$name])  );
+                throw new ValidationException('Поле ' . $name . ' должно быть типа ' . $type . ' А на самом деле - ' . gettype($data[$name]));
             }
 
             // Проверка на пустое значение (если нужно)
